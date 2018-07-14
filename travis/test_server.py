@@ -13,7 +13,7 @@ from travis_helpers import success_msg, fail_msg
 from configparser import ConfigParser
 
 
-def has_test_errors(fname, dbname, odoo_version, check_loaded=True):
+def has_test_errors(fname, dbname, odoo_version, check_loaded=True, rules_check=True):
     """
     Check a list of log lines for test errors.
     Extension point to detect false positives.
@@ -34,9 +34,12 @@ def has_test_errors(fname, dbname, odoo_version, check_loaded=True):
     errors_report = [
         lambda x: x['loglevel'] == 'CRITICAL',
         'At least one test failed',
-        'no access rules, consider adding one',
         'invalid module names, ignored',
         ]
+
+    if rules_check > 0:
+        errors_report.append('no access rules, consider adding one')
+
     # Only check ERROR lines before 7.0
     if odoo_version < '7.0':
         errors_report.append(
@@ -267,7 +270,10 @@ def run_from_env_var(env_name_startswith, environ):
 def create_server_conf(data, version):
     """Create (or edit) default configuration file of odoo
     :params data: Dict with all info to save in file"""
+    odoo_rc = os.path.expanduser('~/.odoorc')
     fname_conf = os.path.expanduser('~/.openerp_serverrc')
+    if os.path.exists(odoo_rc):
+        fname_conf = odoo_rc
     if not os.path.exists(fname_conf):
         # If not exists the file then is created
         fconf = open(fname_conf, "w")
@@ -312,6 +318,8 @@ def main(argv=None):
     test_enable = str2bool(os.environ.get('TEST_ENABLE', True))
     dbtemplate = os.environ.get('MQT_TEMPLATE_DB', 'openerp_template')
     database = os.environ.get('MQT_TEST_DB', 'openerp_test')
+    rules_check = os.environ.get('RULES_CHECK', True)
+
     if not odoo_version:
         # For backward compatibility, take version from parameter
         # if it's not globally set
@@ -434,7 +442,7 @@ def main(argv=None):
             returncode = pipe.wait()
             # Find errors, except from failed mails
             errors = has_test_errors(
-                "stdout.log", database, odoo_version, check_loaded)
+                "stdout.log", database, odoo_version, check_loaded, rules_check)
             if returncode != 0:
                 all_errors.append(to_test)
                 print(fail_msg, "Command exited with code %s" % returncode)
