@@ -37,7 +37,7 @@ def has_test_errors(fname, dbname, odoo_version, check_loaded=True, rules_check=
         'invalid module names, ignored',
         ]
 
-    if int(rules_check) != 0:
+    if rules_check:
         errors_report.append('no access rules, consider adding one')
 
     # Only check ERROR lines before 7.0
@@ -318,7 +318,7 @@ def main(argv=None):
     test_enable = str2bool(os.environ.get('TEST_ENABLE', True))
     dbtemplate = os.environ.get('MQT_TEMPLATE_DB', 'openerp_template')
     database = os.environ.get('MQT_TEST_DB', 'openerp_test')
-    rules_check = os.environ.get('RULES_CHECK', True)
+    rules_check = str2bool(os.environ.get('RULES_CHECK', True))
 
     if not odoo_version:
         # For backward compatibility, take version from parameter
