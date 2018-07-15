@@ -79,3 +79,6 @@ node
 package-lock.json
 travis/phantomjs
 node_modules
+travis/pylint_odoo_requirements.txt
+phantomjs-prebuilt@latest/
+test-env/

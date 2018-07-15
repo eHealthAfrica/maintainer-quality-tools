@@ -37,7 +37,7 @@ def has_test_errors(fname, dbname, odoo_version, check_loaded=True, rules_check=
         'invalid module names, ignored',
         ]
 
-    if rules_check > 0:
+    if int(rules_check) != 0:
         errors_report.append('no access rules, consider adding one')
 
     # Only check ERROR lines before 7.0

@@ -9,7 +9,7 @@ if [ "${LINT_CHECK}" != "0" ]; then
     wget -q https://raw.githubusercontent.com/OCA/pylint-odoo/master/requirements.txt -O ${HOME}/maintainer-quality-tools/travis/pylint_odoo_requirements.txt
     pip install --upgrade -r ${HOME}/maintainer-quality-tools/travis/pylint_odoo_requirements.txt
     pip install --upgrade --pre --no-deps git+https://github.com/OCA/pylint-odoo.git   # To use last version ever
-    npm install -g eslint  # Extra package for pylint-odoo plugin
+    npm install eslint  # Extra package for pylint-odoo plugin
     if [ -f "${HOME}/.nvm/nvm.sh" ]; then
         # Update nodejs v6.latest required by eslint
         # Using nvm of travis
@@ -27,9 +27,9 @@ fi
 
 
 # Install less
-ln -s `which nodejs` $HOME/maintainer-quality-tools/travis/node
+ln -s `which nodejs` $HOME/maintainer-quality-tools/travis/node && echo "node already exists"
 # Remove fixed version after fix https://github.com/odoo/odoo/issues/25632
-npm install -g less@3.0.4 less-plugin-clean-css
+npm install less@3.0.4 less-plugin-clean-css
 
 if [ "${WEBSITE_REPO}" == "1" ]; then
     if [ -f ~/.rvm/scripts/rvm ]; then
@@ -48,7 +48,7 @@ fi
 # Update PhantomJS (v10 compat)
 if [ "${PHANTOMJS_VERSION}" != "OS" ]; then
     npm install --prefix ${TRAVIS_BUILD_DIR} "phantomjs-prebuilt@${PHANTOMJS_VERSION:=latest}"
-    ln -s "${TRAVIS_BUILD_DIR}/node_modules/phantomjs-prebuilt/lib/phantom/bin/phantomjs" "${HOME}/maintainer-quality-tools/travis/phantomjs"
+    ln -s "${TRAVIS_BUILD_DIR}/node_modules/phantomjs-prebuilt/lib/phantom/bin/phantomjs" "${HOME}/maintainer-quality-tools/travis/phantomjs" && echo "already exists"
 fi
 
 # For backward compatibility, take version from parameter if it's not globally set
@@ -78,19 +78,19 @@ if [ -d "${REPO_CACHED}/odoo" ]; then
     ln -sf ${REPO_CACHED}/odoo ${ODOO_PATH}
 else
     echo "Downloading Odoo"
-    git clone --depth=50 https://github.com/$REMOTE/$REPO_NAME.git -b $BRANCH ${ODOO_PATH}
-    git --work-tree=${ODOO_PATH} --git-dir=${ODOO_PATH}/.git remote rename origin $REMOTE
+    git clone --depth=50 https://github.com/$REMOTE/$REPO_NAME.git -b $BRANCH ${ODOO_PATH} && echo "dir already exists"
+    git --work-tree=${ODOO_PATH} --git-dir=${ODOO_PATH}/.git remote rename origin $REMOTE && "skipping this"
 fi
 if [ "x${PULL_REQUEST}" == "x" ] ; then
     git --work-tree=${ODOO_PATH} --git-dir=${ODOO_PATH}/.git fetch --depth=1 ${REMOTE} ${BRANCH} \
         && git --work-tree=${ODOO_PATH} --git-dir=${ODOO_PATH}/.git config --local --bool core.bare false \
-        && git --work-tree=${ODOO_PATH} --git-dir=${ODOO_PATH}/.git checkout -b ${BRANCH}-${REMOTE} -qf ${REMOTE}/${BRANCH}
+        && git --work-tree=${ODOO_PATH} --git-dir=${ODOO_PATH}/.git checkout -b ${BRANCH}-${REMOTE} -qf ${REMOTE}/${BRANCH} && "skipping this"
 else
     # Is a pull request
     git --work-tree=${ODOO_PATH} --git-dir=${ODOO_PATH}/.git reset --hard
     git --work-tree=${ODOO_PATH} --git-dir=${ODOO_PATH}/.git fetch --depth=1 ${REMOTE} $PULL_REQUEST/head:${BRANCH}-${REMOTE} \
         && git --work-tree=${ODOO_PATH} --git-dir=${ODOO_PATH}/.git config --local --bool core.bare false \
-        && git --work-tree=${ODOO_PATH} --git-dir=${ODOO_PATH}/.git checkout ${BRANCH}-${REMOTE}
+        && git --work-tree=${ODOO_PATH} --git-dir=${ODOO_PATH}/.git checkout ${BRANCH}-${REMOTE}  && "skipping this"
 fi
 
 # Workaround to force using system site packages (see https://github.com/Shippable/support/issues/241#issuecomment-57947925)
@@ -103,9 +103,9 @@ if [ ! -f ${ODOO_PATH}/requirements.txt ]; then
     wget https://raw.githubusercontent.com/odoo/odoo/8.0/requirements.txt -O ${ODOO_PATH}/requirements.txt
 fi
 # Remove python-ldap from odoo requirements because is not a common module used
-sed -i '/^python-ldap\=\=/d' ${ODOO_PATH}/requirements.txt
+sed -i '/^python-ldap\=\=/d' ${ODOO_PATH}/requirements.txt && echo "could not remove ldap"
 # Use requests with [security] suffix to fix [Errno 111] Connection refused for old python2.7 versions.
-sed -i 's/^requests\=\=/requests[security]\=\=/g' ${ODOO_PATH}/requirements.txt
+sed -i 's/^requests\=\=/requests[security]\=\=/g' ${ODOO_PATH}/requirements.txt && echo "could not set request"
 
 pip install -q --no-binary pycparser -r ${ODOO_PATH}/requirements.txt
 pip install -q QUnitSuite coveralls codecov
